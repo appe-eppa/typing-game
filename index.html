@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <title>タイピングであそぼう🌸（モード切替）</title>
+  <title>タイピングであそぼう🌸</title>
   <style>
     body {
       background: #ffeef8;
@@ -12,17 +12,17 @@
       padding: 2em;
     }
     h1 {
-      font-size: 2em;
-      margin-bottom: 1em;
+      font-size: 2.2em;
+      margin-bottom: 0.5em;
     }
     #word {
       font-size: 2.5em;
       background: #fff0f5;
       border: 2px dotted #ffb6c1;
-      padding: 1em;
+      padding: 0.5em 1em;
       display: inline-block;
-      margin-bottom: 1em;
       border-radius: 20px;
+      margin-bottom: 1em;
     }
     #mode {
       margin: 1em auto;
@@ -35,19 +35,21 @@
       cursor: pointer;
     }
     #input {
-      font-size: 1.5em;
-      padding: 10px;
+      font-size: 2em;
+      padding: 10px 20px;
       border-radius: 12px;
       border: 2px solid #ffb6c1;
       ime-mode: active;
       margin-top: 1em;
+      width: 60%;
+      max-width: 500px;
     }
     #result {
       font-size: 1.5em;
       margin-top: 1em;
     }
     #face-img {
-      margin-top: 1.5em;
+      margin-top: 2em;
       width: 150px;
       height: auto;
     }
@@ -56,23 +58,20 @@
 <body>
   <h1>🌸 タイピングであそぼう 🌸</h1>
 
-  <!-- 出題中の単語 -->
+  <!-- 問題 -->
   <div id="word">ねこ</div><br>
 
-  <!-- モード切り替えボタン -->
+  <!-- モード切り替え -->
   <button id="mode">モード：日本語判定</button><br>
 
   <!-- 入力欄 -->
   <input type="text" id="input" placeholder="入力してEnterで判定" autofocus><br>
-
-  <!-- 判定結果 -->
   <div id="result"></div>
 
   <!-- キャラクター画像 -->
   <img id="face-img" src="kuromi.png" alt="くろみちゃん">
 
   <script>
-    // 出題リスト
     const words = [
       { jp: "ねこ", romaji: "neko" },
       { jp: "いぬ", romaji: "inu" },
@@ -84,10 +83,42 @@
     let current = 0;
     let mode = "jp"; // "jp" or "romaji"
 
-    // 出題表示
     function showWord() {
       document.getElementById("word").textContent = words[current].jp;
       document.getElementById("input").value = "";
       document.getElementById("result").textContent = "";
       document.getElementById("face-img").style.opacity = "1";
-      document.getElementById("input").focu
+      document.getElementById("input").focus();
+    }
+
+    function checkAnswer(inputText) {
+      const typed = inputText.trim().toLowerCase().replace(/\s/g, "");
+      const answer = mode === "jp" ? words[current].jp : words[current].romaji;
+
+      if (typed === answer) {
+        document.getElementById("result").textContent = "🌟せいかい！🌟";
+        document.getElementById("face-img").style.opacity = "1";
+        current = (current + 1) % words.length;
+        setTimeout(showWord, 1000);
+      } else {
+        document.getElementById("result").textContent = "❌ちがうよ〜";
+        document.getElementById("face-img").style.opacity = "0.5";
+      }
+    }
+
+    document.getElementById("input").addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        checkAnswer(this.value);
+      }
+    });
+
+    document.getElementById("mode").addEventListener("click", function () {
+      mode = (mode === "jp") ? "romaji" : "jp";
+      this.textContent = "モード：" + (mode === "jp" ? "日本語判定" : "ローマ字判定");
+      showWord();
+    });
+
+    showWord();
+  </script>
+</body>
+</html>

@@ -25,7 +25,7 @@
       border-radius: 20px;
     }
     #mode {
-      margin-top: 1em;
+      margin: 1em auto;
       font-size: 1em;
       padding: 0.5em 1em;
       background: #ffb6c1;
@@ -54,14 +54,25 @@
   </style>
 </head>
 <body>
-  <h1>🌸 タイピング
+  <h1>🌸 タイピングであそぼう 🌸</h1>
+
+  <!-- 出題中の単語 -->
+  <div id="word">ねこ</div><br>
+
+  <!-- モード切り替えボタン -->
+  <button id="mode">モード：日本語判定</button><br>
+
+  <!-- 入力欄 -->
   <input type="text" id="input" placeholder="入力してEnterで判定" autofocus><br>
+
+  <!-- 判定結果 -->
   <div id="result"></div>
 
-  <!-- くろみちゃん画像表示 -->
+  <!-- キャラクター画像 -->
   <img id="face-img" src="kuromi.png" alt="くろみちゃん">
 
   <script>
+    // 出題リスト
     const words = [
       { jp: "ねこ", romaji: "neko" },
       { jp: "いぬ", romaji: "inu" },
@@ -71,43 +82,12 @@
     ];
 
     let current = 0;
-    let mode = "jp"; // "jp" または "romaji"
+    let mode = "jp"; // "jp" or "romaji"
 
+    // 出題表示
     function showWord() {
       document.getElementById("word").textContent = words[current].jp;
       document.getElementById("input").value = "";
       document.getElementById("result").textContent = "";
-      document.getElementById("input").focus();
-    }
-
-    function checkAnswer(inputText) {
-      const typed = inputText.trim().toLowerCase().replace(/\s/g, "");
-      const answer = mode === "jp" ? words[current].jp : words[current].romaji;
-
-      if (typed === answer) {
-        document.getElementById("result").textContent = "🌟せいかい！🌟";
-        document.getElementById("face-img").style.opacity = "1";
-        current = (current + 1) % words.length;
-        setTimeout(showWord, 1000);
-      } else {
-        document.getElementById("result").textContent = "❌ちがうよ〜";
-        document.getElementById("face-img").style.opacity = "0.5";
-      }
-    }
-
-    document.getElementById("input").addEventListener("keydown", function (e) {
-      if (e.key === "Enter") {
-        checkAnswer(this.value);
-      }
-    });
-
-    document.getElementById("mode").addEventListener("click", function () {
-      mode = mode === "jp" ? "romaji" : "jp";
-      this.textContent = "モード：" + (mode === "jp" ? "日本語判定" : "ローマ字判定");
-      showWord();
-    });
-
-    showWord();
-  </script>
-</body>
-</html>
+      document.getElementById("face-img").style.opacity = "1";
+      document.getElementById("input").focu

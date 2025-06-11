@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>タイピングであそぼう🌸</title>
+  <meta charset="UTF-8" />
+  <title>タイピングであそぼう🌸（スプレッドシート連携）</title>
   <style>
     body {
       background: #ffeef8;
@@ -39,7 +39,6 @@
       padding: 10px 20px;
       border-radius: 12px;
       border: 2px solid #ffb6c1;
-      ime-mode: active;
       margin-top: 1em;
       width: 60%;
       max-width: 500px;
@@ -53,75 +52,88 @@
       margin-top: 2em;
       width: 150px;
       height: auto;
-      display: none; /* ← 最初は非表示 */
+      display: none;
     }
   </style>
 </head>
 <body>
   <h1>🌸 タイピングであそぼう 🌸</h1>
 
-  <div id="word">ねこ</div><br>
+  <div id="word">読み込み中...</div><br>
   <button id="mode">モード：日本語判定</button><br>
 
 <input type="text" id="input" placeholder="入力してEnterで判定" autofocus autocomplete="off"><br>
   <div id="result"></div>
-
-  <!-- 結果によって表示される画像 -->
   <img id="face-img" src="" alt="くろみちゃん">
 
   <script>
-    const words = [
-      { jp: "ねこ", romaji: "neko" },
-      { jp: "いぬ", romaji: "inu" },
-      { jp: "りんご", romaji: "ringo" },
-      { jp: "はな", romaji: "hana" },
-      { jp: "くるま", romaji: "kuruma" }
-    ];
-
+    let words = [];
     let current = 0;
     let mode = "jp"; // "jp" or "romaji"
 
+    const wordEl = document.getElementById("word");
+    const inputEl = document.getElementById("input");
+    const resultEl = document.getElementById("result");
+    const faceImg = document.getElementById("face-img");
+    const modeBtn = document.getElementById("mode");
+
+    // スプレッドシートCSVのURL
+    const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTNvETkVmlqIgVa3yZxuMfUwrMGP2m-wbIXN6r6vIEk7NQvU-K9JgwGQ9F14l4nVeSHFJcgHQ78e7IQ/pub?gid=0&single=true&output=csv";
+
+    // CSVを読み込んで words 配列に変換
+    fetch(csvUrl)
+      .then(res => res.text())
+      .then(csv => {
+        const lines = csv.trim().split("\n").slice(1); // 1行目ヘッダを除く
+        words = lines.map(line => {
+          const [jp, romaji] = line.split(",");
+          return { jp: jp.trim(), romaji: romaji.trim() };
+        });
+        showWord();
+      })
+      .catch(err => {
+        wordEl.textContent = "読み込み失敗...";
+        console.error("CSV読み込みエラー:", err);
+      });
+
     function showWord() {
-      document.getElementById("word").textContent = words[current].jp;
-      document.getElementById("input").value = "";
-      document.getElementById("result").textContent = "";
-      const face = document.getElementById("face-img");
-      face.style.display = "none";      // 画像非表示
-      face.src = "";                    // srcクリア
-      document.getElementById("input").focus();
+      wordEl.textContent = words[current]?.jp || "終了！";
+      inputEl.value = "";
+      resultEl.textContent = "";
+      faceImg.style.display = "none";
+      faceImg.src = "";
+      inputEl.focus();
     }
 
     function checkAnswer(inputText) {
-      const typed = inputText.trim().toLowerCase().replace(/\s/g, "");
+      if (!words[current]) return;
+      const typed = inputText.trim().toLowerCase();
       const answer = mode === "jp" ? words[current].jp : words[current].romaji;
-      const face = document.getElementById("face-img");
 
       if (typed === answer) {
-        document.getElementById("result").textContent = "🌟せいかい！🌟";
-        face.src = "kuromi.jpg";
-        face.style.display = "inline-block";
-        current = (current + 1) % words.length;
+        resultEl.textContent = "🌟せいかい！🌟";
+        faceImg.src = "kuromi.png";
+        faceImg.style.display = "inline-block";
+        current++;
         setTimeout(showWord, 1500);
       } else {
-        document.getElementById("result").textContent = "❌ちがうよ〜";
-        face.src = "kuromi-ng.jpg";
-        face.style.display = "inline-block";
+        resultEl.textContent = "❌ちがうよ〜";
+        faceImg.src = "kuromi-ng.jpg";
+        faceImg.style.display = "inline-block";
       }
     }
 
-    document.getElementById("input").addEventListener("keydown", function (e) {
+    inputEl.addEventListener("keydown", function (e) {
       if (e.key === "Enter") {
         checkAnswer(this.value);
       }
     });
 
-    document.getElementById("mode").addEventListener("click", function () {
-      mode = (mode === "jp") ? "romaji" : "jp";
+    modeBtn.addEventListener("click", function () {
+      mode = mode === "jp" ? "romaji" : "jp";
       this.textContent = "モード：" + (mode === "jp" ? "日本語判定" : "ローマ字判定");
       showWord();
     });
-
-    showWord();
   </script>
 </body>
 </html>

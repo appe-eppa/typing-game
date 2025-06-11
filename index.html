@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>タイピングであそぼう🌸</title>
   <style>
     body {
@@ -13,6 +13,7 @@
     }
     h1 {
       font-size: 2.2em;
+      margin-bottom: 0.5em;
     }
     #word {
       font-size: 2.5em;
@@ -21,7 +22,17 @@
       padding: 0.5em 1em;
       display: inline-block;
       border-radius: 20px;
+      margin-bottom: 1em;
+    }
+    #mode, #restart {
       margin: 1em auto;
+      font-size: 1em;
+      padding: 0.5em 1em;
+      background: #ffb6c1;
+      border: none;
+      border-radius: 10px;
+      color: white;
+      cursor: pointer;
     }
     #input {
       font-size: 2em;
@@ -31,16 +42,6 @@
       margin-top: 1em;
       width: 60%;
       max-width: 500px;
-    }
-    #mode, #restart {
-      font-size: 1em;
-      padding: 0.5em 1em;
-      background: #ffb6c1;
-      border: none;
-      border-radius: 10px;
-      color: white;
-      cursor: pointer;
-      margin: 1em;
     }
     #result {
       font-size: 1.5em;
@@ -59,16 +60,13 @@
   <h1>🌸 タイピングであそぼう 🌸</h1>
 
   <div id="word">読み込み中...</div><br>
-  <button id="mode">モード：日本語判定</button>
-  <button id="restart" style="display:none;">初めからやる</button><br>
-
+  <button id="mode">モード：日本語判定</button><br>
   <input type="text" id="input" placeholder="入力してEnterで判定" autofocus autocomplete="off"><br>
   <div id="result"></div>
   <img id="face-img" src="" alt="くろみちゃん">
+  <button id="restart" style="display:none;">初めからやる</button>
 
   <script>
-    const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTNvETkVmlqIgVa3yZxuMfUwrMGP2m-wbIXN6r6vIEk7NQvU-K9JgwGQ9F14l4nVeSHFJcgHQ78e7IQ/pub?gid=0&single=true&output=csv";
-
     let allWords = [];
     let quizWords = [];
     let currentIndex = 0;
@@ -80,6 +78,8 @@
     const faceImg = document.getElementById("face-img");
     const modeBtn = document.getElementById("mode");
     const restartBtn = document.getElementById("restart");
+
+    const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTNvETkVmlqIgVa3yZxuMfUwrMGP2m-wbIXN6r6vIEk7NQvU-K9JgwGQ9F14l4nVeSHFJcgHQ78e7IQ/pub?gid=0&single=true&output=csv";
 
     fetch(csvUrl)
       .then(res => res.text())
@@ -96,8 +96,18 @@
         console.error("CSV読み込みエラー:", err);
       });
 
+    function shuffle(array) {
+      const copy = [...array];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
     function startQuiz() {
-      quizWords = shuffle(allWords).slice(0, 10);
+      const validWords = allWords.filter(w => w.jp && w.romaji);
+      quizWords = shuffle(validWords).slice(0, 10);
       currentIndex = 0;
       restartBtn.style.display = "none";
       inputEl.disabled = false;
@@ -106,13 +116,11 @@
     }
 
     function showWord() {
-      if (currentIndex >= quizWords.length) {
-        wordEl.textContent = "🎉 ぜんぶおわったよ！";
-        resultEl.textContent = "";
+      if (!quizWords[currentIndex]) {
+        wordEl.textContent = "終了！おつかれさま。";
         inputEl.disabled = true;
         modeBtn.disabled = true;
         restartBtn.style.display = "inline-block";
-        faceImg.style.display = "none";
         return;
       }
       wordEl.textContent = quizWords[currentIndex].jp;
@@ -125,9 +133,9 @@
 
     function checkAnswer(inputText) {
       const typed = inputText.trim().toLowerCase();
-      const correct = mode === "jp" ? quizWords[currentIndex].jp : quizWords[currentIndex].romaji;
+      const answer = mode === "jp" ? quizWords[currentIndex].jp : quizWords[currentIndex].romaji;
 
-      if (typed === correct) {
+      if (typed === answer) {
         resultEl.textContent = "🌟せいかい！🌟";
         faceImg.src = "kuromi.png";
         faceImg.style.display = "inline-block";
@@ -140,30 +148,21 @@
       }
     }
 
-    inputEl.addEventListener("keydown", e => {
+    inputEl.addEventListener("keydown", function (e) {
       if (e.key === "Enter") {
-        checkAnswer(inputEl.value);
+        checkAnswer(this.value);
       }
     });
 
-    modeBtn.addEventListener("click", () => {
+    modeBtn.addEventListener("click", function () {
       mode = (mode === "jp") ? "romaji" : "jp";
-      modeBtn.textContent = "モード：" + (mode === "jp" ? "日本語判定" : "ローマ字判定");
+      this.textContent = "モード：" + (mode === "jp" ? "日本語判定" : "ローマ字判定");
       showWord();
     });
 
-    restartBtn.addEventListener("click", () => {
+    restartBtn.addEventListener("click", function () {
       startQuiz();
     });
-
-    function shuffle(array) {
-      const copy = [...array];
-      for (let i = copy.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [copy[i], copy[j]] = [copy[j], copy[i]];
-      }
-      return copy;
-    }
   </script>
 </body>
 </html>

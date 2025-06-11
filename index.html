@@ -47,12 +47,13 @@
     #result {
       font-size: 1.5em;
       margin-top: 1em;
-      min-height: 1.5em; /* 常にスペースを確保 */
+      min-height: 1.5em;
     }
     #face-img {
       margin-top: 2em;
       width: 150px;
       height: auto;
+      display: none; /* ← 最初は非表示 */
     }
   </style>
 </head>
@@ -60,13 +61,13 @@
   <h1>🌸 タイピングであそぼう 🌸</h1>
 
   <div id="word">ねこ</div><br>
-
   <button id="mode">モード：日本語判定</button><br>
 
   <input type="text" id="input" placeholder="入力してEnterで判定" autofocus><br>
   <div id="result"></div>
 
-  <img id="face-img" src="kuromi.png" alt="くろみちゃん">
+  <!-- 結果によって表示される画像 -->
+  <img id="face-img" src="" alt="くろみちゃん">
 
   <script>
     const words = [
@@ -84,22 +85,27 @@
       document.getElementById("word").textContent = words[current].jp;
       document.getElementById("input").value = "";
       document.getElementById("result").textContent = "";
-      document.getElementById("face-img").style.opacity = "1";
+      const face = document.getElementById("face-img");
+      face.style.display = "none";      // 画像非表示
+      face.src = "";                    // srcクリア
       document.getElementById("input").focus();
     }
 
     function checkAnswer(inputText) {
       const typed = inputText.trim().toLowerCase().replace(/\s/g, "");
       const answer = mode === "jp" ? words[current].jp : words[current].romaji;
+      const face = document.getElementById("face-img");
 
       if (typed === answer) {
         document.getElementById("result").textContent = "🌟せいかい！🌟";
-        document.getElementById("face-img").style.opacity = "1";
+        face.src = "kuromi.png";
+        face.style.display = "inline-block";
         current = (current + 1) % words.length;
-        setTimeout(showWord, 1500); // 少し遅らせて「せいかい！」を見せる
+        setTimeout(showWord, 1500);
       } else {
         document.getElementById("result").textContent = "❌ちがうよ〜";
-        document.getElementById("face-img").style.opacity = "0.5";
+        face.src = "kuromi-ng.jpg";
+        face.style.display = "inline-block";
       }
     }
 

@@ -22,10 +22,10 @@
       padding: 0.5em 1em;
       display: inline-block;
       border-radius: 20px;
-      margin-bottom: 1em;
+      margin-bottom: 0.5em;
     }
     #mode, #restart {
-      margin: 1em auto;
+      margin: 0.8em auto;
       font-size: 1em;
       padding: 0.5em 1em;
       background: #ffb6c1;
@@ -45,11 +45,11 @@
     }
     #result {
       font-size: 1.5em;
-      margin-top: 1em;
+      margin-top: 0.5em;
       min-height: 1.5em;
     }
     #face-img {
-      margin-top: 2em;
+      margin-top: 0.5em;
       width: 150px;
       height: auto;
       display: none;
@@ -87,12 +87,10 @@
 
   <div id="word">読み込み中...</div><br>
   <div id="result"></div>
+  <img id="face-img" src="" alt="くろみちゃん">
   <button id="restart" style="display:none">初めからやる</button><br>
   <button id="mode">モード：日本語判定</button><br>
-
   <input type="text" id="input" placeholder="入力してEnterで判定" autofocus autocomplete="off"><br>
-
-  <img id="face-img" src="" alt="くろみちゃん">
 
   <script>
     let words = [];

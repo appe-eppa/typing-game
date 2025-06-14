@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8" />
-  <title>タイピングであそぼう🌸（完全版）</title>
+  <title>タイピングであそぼう🌸（スプレッドシート連携）</title>
   <style>
     body {
       background: #ffeef8;
@@ -10,6 +10,8 @@
       color: #ff69b4;
       text-align: center;
       padding: 2em;
+      overflow-x: hidden;
+      overflow-y: auto;
     }
     h1 {
       font-size: 2.2em;
@@ -25,6 +27,7 @@
       margin-bottom: 1em;
     }
     #mode, #restart {
+      margin: 1em auto;
       font-size: 1em;
       padding: 0.5em 1em;
       background: #ffb6c1;
@@ -32,10 +35,6 @@
       border-radius: 10px;
       color: white;
       cursor: pointer;
-      margin: 1em auto;
-    }
-    #restart {
-      display: none;
     }
     #input {
       font-size: 2em;
@@ -57,28 +56,51 @@
       height: auto;
       display: none;
     }
+
+    @media screen and (orientation: landscape) {
+      body {
+        padding: 1em;
+      }
+      h1 {
+        font-size: 1.8em;
+      }
+      #word {
+        font-size: 2em;
+        padding: 0.4em 1em;
+      }
+      #input {
+        font-size: 1.5em;
+        padding: 8px 16px;
+        width: 50%;
+      }
+      #face-img {
+        max-height: 100px;
+        width: auto;
+      }
+      #mode, #restart {
+        font-size: 0.9em;
+        padding: 0.5em 1.2em;
+      }
+    }
   </style>
 </head>
 <body>
   <h1>🌸 タイピングであそぼう 🌸</h1>
 
   <div id="word">読み込み中...</div><br>
+  <div id="result"></div>
+  <button id="restart" style="display:none">初めからやる</button><br>
+  <button id="mode">モード：日本語判定</button><br>
 
   <input type="text" id="input" placeholder="入力してEnterで判定" autofocus autocomplete="off"><br>
-  <div id="result"></div>
-
-  <button id="restart">初めからやる</button><br>
-  <button id="mode">モード：日本語判定</button><br>
 
   <img id="face-img" src="" alt="くろみちゃん">
 
   <script>
-    const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTNvETkVmlqIgVa3yZxuMfUwrMGP2m-wbIXN6r6vIEk7NQvU-K9JgwGQ9F14l4nVeSHFJcgHQ78e7IQ/pub?gid=0&single=true&output=csv";
-
-    let allWords = [];
+    let words = [];
     let quizWords = [];
     let currentIndex = 0;
-    let mode = "jp";
+    let mode = "jp"; // "jp" or "romaji"
 
     const wordEl = document.getElementById("word");
     const inputEl = document.getElementById("input");
@@ -87,28 +109,57 @@
     const modeBtn = document.getElementById("mode");
     const restartBtn = document.getElementById("restart");
 
+    const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTNvETkVmlqIgVa3yZxuMfUwrMGP2m-wbIXN6r6vIEk7NQvU-K9JgwGQ9F14l4nVeSHFJcgHQ78e7IQ/pub?gid=0&single=true&output=csv";
+
+    fetch(csvUrl)
+      .then(res => res.text())
+      .then(csv => {
+        const lines = csv.trim().split("\n").slice(1);
+        words = lines.map(line => {
+          const [jp, romaji] = line.split(",");
+          return { jp: jp.trim(), romaji: romaji.trim() };
+        });
+        startGame();
+      })
+      .catch(err => {
+        wordEl.textContent = "読み込み失敗...";
+        console.error("CSV読み込みエラー:", err);
+      });
+
+    function startGame() {
+      quizWords = shuffle(words).slice(0, 10);
+      currentIndex = 0;
+      inputEl.disabled = false;
+      modeBtn.disabled = false;
+      restartBtn.style.display = "none";
+      showWord();
+    }
+
     function shuffle(array) {
-      for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-      }
-      return array;
+      return [...array].sort(() => Math.random() - 0.5);
     }
 
     function showWord() {
-      if (!quizWords[currentIndex]) return;
+      if (!quizWords[currentIndex]) {
+        wordEl.textContent = "ぜんぶおわったよ！";
+        inputEl.value = "";
+        inputEl.disabled = true;
+        modeBtn.disabled = true;
+        restartBtn.style.display = "inline-block";
+        faceImg.style.display = "none";
+        return;
+      }
       wordEl.textContent = quizWords[currentIndex].jp;
       inputEl.value = "";
       resultEl.textContent = "";
       faceImg.style.display = "none";
       faceImg.src = "";
-      inputEl.disabled = false;
       inputEl.focus();
     }
 
-    function checkAnswer(text) {
+    function checkAnswer(inputText) {
       if (!quizWords[currentIndex]) return;
-      const typed = text.trim().toLowerCase();
+      const typed = inputText.trim().toLowerCase();
       const answer = mode === "jp" ? quizWords[currentIndex].jp : quizWords[currentIndex].romaji;
 
       if (typed === answer) {
@@ -116,15 +167,7 @@
         faceImg.src = "kuromi.png";
         faceImg.style.display = "inline-block";
         currentIndex++;
-
-        if (currentIndex >= quizWords.length) {
-          wordEl.textContent = "ぜんぶおわったよ！";
-          inputEl.disabled = true;
-          modeBtn.disabled = true;
-          restartBtn.style.display = "inline-block";
-        } else {
-          setTimeout(showWord, 1500);
-        }
+        setTimeout(showWord, 1500);
       } else {
         resultEl.textContent = "❌ちがうよ〜";
         faceImg.src = "kuromi-ng.jpg";
@@ -132,42 +175,21 @@
       }
     }
 
-    inputEl.addEventListener("keydown", e => {
+    inputEl.addEventListener("keydown", function (e) {
       if (e.key === "Enter") {
-        checkAnswer(inputEl.value);
+        checkAnswer(this.value);
       }
     });
 
-    modeBtn.addEventListener("click", () => {
-      mode = (mode === "jp") ? "romaji" : "jp";
-      modeBtn.textContent = "モード：" + (mode === "jp" ? "日本語判定" : "ローマ字判定");
+    modeBtn.addEventListener("click", function () {
+      mode = mode === "jp" ? "romaji" : "jp";
+      this.textContent = "モード：" + (mode === "jp" ? "日本語判定" : "ローマ字判定");
       showWord();
     });
 
-    restartBtn.addEventListener("click", () => {
-      currentIndex = 0;
-      quizWords = shuffle(allWords).slice(0, 10);
-      restartBtn.style.display = "none";
-      modeBtn.disabled = false;
-      showWord();
+    restartBtn.addEventListener("click", function () {
+      startGame();
     });
-
-    // CSV読み込み
-    fetch(csvUrl)
-      .then(res => res.text())
-      .then(csv => {
-        const lines = csv.trim().split("\n").slice(1);
-        allWords = lines.map(line => {
-          const [jp, romaji] = line.split(",");
-          return { jp: jp.trim(), romaji: romaji.trim() };
-        });
-        quizWords = shuffle(allWords).slice(0, 10);
-        showWord();
-      })
-      .catch(err => {
-        wordEl.textContent = "読み込み失敗...";
-        console.error(err);
-      });
   </script>
 </body>
 </html>
